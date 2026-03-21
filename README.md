@@ -2,7 +2,7 @@
 
 A self-hosted homelab built on Proxmox VE for learning
 penetration testing and running privacy-focused personal
-services. Built from scratch on a budget desktop PC.
+services. Built from scratch on a budget Dell desktop PC.
 
 ## Hardware
 | Machine       | Role                  | OS              |
@@ -35,7 +35,7 @@ services. Built from scratch on a budget desktop PC.
 | Heimdall          | Services dashboard             |
 | Nginx Proxy Mgr   | Reverse proxy and SSL          |
 | Grafana           | Infrastructure monitoring      |
-|Wazuh              | SIEM 
+|Wazuh              | SIEM                           |
 
 ## Lab Environment
 | Machine              | Purpose                         |
@@ -59,7 +59,8 @@ services. Built from scratch on a budget desktop PC.
 - [x] Proxmox VE 9.1 installed and configured
 - [x] Repository hardening completed
 - [x] System updated
-- [ ] Network isolation configured
+- [x] Network isolation configured
+- [x] Firewall configured
 - [ ] LXC services deployed
 - [ ] Lab VMs deployed
 - [ ] WireGuard VPN configured
