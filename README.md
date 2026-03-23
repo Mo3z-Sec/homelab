@@ -1,7 +1,7 @@
 # Homelab
 
 A self-hosted homelab built on Proxmox VE for learning
-penetration testing and running privacy-focused personal
+penetration testing and SIEM, also running privacy-focused personal
 services. Built from scratch on a budget Dell desktop PC.
 
 ## Hardware
@@ -25,17 +25,16 @@ services. Built from scratch on a budget Dell desktop PC.
 | Service           | Purpose                        |
 |-------------------|--------------------------------|
 | Pi-hole           | Network-wide DNS ad blocker    |
-| Nextcloud         | Self-hosted Google Drive       |
-| Immich            | Self-hosted Google Photos      |
-| Gitea             | Private Git repository         |
+| Nextcloud         | Self-hosted Drive              |
 | WireGuard         | VPN for remote access          |
 | Crowdsec          | Active threat blocking         |
-| Vaultwarden       | Self-hosted password manager   |
 | Uptime Kuma       | Service uptime monitoring      |
 | Heimdall          | Services dashboard             |
 | Nginx Proxy Mgr   | Reverse proxy and SSL          |
-| Grafana           | Infrastructure monitoring      |
-|Wazuh              | SIEM                           |
+| Splunk            | SIEM                           |
+| Suricata          | Network Security Monitor       |
+| Grafana           | Visual dashboards              |
+| duckDNS           | Hosts my domain                 |
 
 ## Lab Environment
 | Machine              | Purpose                         |

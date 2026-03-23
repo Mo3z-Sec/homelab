@@ -119,3 +119,147 @@ critical. When setting up a firewall remotely always
 have a physical access plan in case you lock yourself out.
 A monitor and keyboard connected to the server is your
 emergency access method.
+
+---
+
+## 2026-03-22 — Power outage caused Proxmox to restart and all containers shut down
+
+**Symptom**
+Power went out in the house causing the Proxmox server
+to shut down unexpectedly. When power was restored and
+the PC restarted, all LXC containers remained offline
+and did not start automatically. Pi-hole and Nextcloud
+were both unreachable after the power cut.
+
+**Cause**
+Proxmox containers do not auto start after a reboot
+by default. The Start at boot option is disabled on
+all containers unless explicitly enabled. Without this
+setting every container requires manual starting after
+any power loss or reboot.
+
+**Fix — Enable Start at Boot for All Containers**
+For each container in Proxmox web UI:
+- Click container in left panel
+- Click Options
+- Double click Start at boot
+- Set to Yes
+- Click OK
+
+Applied to:
+- 100 (pihole)    | Start at boot: Yes
+- 101 (nextcloud)  | Start at boot: Yes
+
+Will apply to every future container during creation.
+
+**Fix — Set Startup Order**
+Configured startup order so Pi-hole starts before
+Nextcloud ensuring DNS is ready before other services:
+
+Container 100 (pihole):
+- Order: 1
+- Up delay: 30 seconds
+
+Container 101 (nextcloud):
+- Order: 2
+- Up delay: 30 seconds
+
+**Fix — BIOS Power Recovery**
+Entered BIOS on Proxmox PC and set AC Power Recovery
+to Power On so the PC automatically powers on when
+electricity is restored after a power cut.
+
+**Auto Recovery Chain After This Fix**
+1. Power restored
+2. PC powers on automatically via BIOS setting
+3. Proxmox boots up
+4. Pi-hole starts first (order 1)
+5. 30 second delay
+6. Nextcloud starts (order 2)
+7. All services running without any manual action
+
+**Lesson Learned**
+Always enable Start at boot on every container
+immediately after creating it. Always configure
+startup order so dependency services like Pi-hole
+start before services that depend on DNS.
+Always configure BIOS power recovery on any machine
+running as a server so it survives power cuts
+automatically. A proper server should require zero
+manual intervention after a power outage.
+
+---
+
+## 2026-03-23 — Nextcloud container disk filled to 100%
+
+**Symptom**
+Nextcloud showing Internal Server Error 507 storage
+quota and 412 precondition failed. Apache error log
+showing No space left on device. Nextcloud completely
+inaccessible from browser.
+
+**Cause**
+Phone auto upload was writing photos directly to the
+Nextcloud data directory inside the container disk.
+The container disk was only 8GB and filled up completely
+with 4.9GB of photos leaving only 1.8MB free.
+
+Container disk usage at time of failure:
+- Total: 7.8GB
+- Used: 7.4GB
+- Available: 1.8MB
+- Use: 100%
+
+**Immediate Fix — Free Emergency Space**
+```bash
+apt clean
+truncate -s 0 /var/log/apache2/access.log
+truncate -s 0 /var/log/apache2/error.log
+truncate -s 0 /var/log/apache2/other_vhosts_access.log
+```
+
+**Fix 1 — Expand Container Disk**
+In Proxmox web UI:
+- Click 101 (nextcloud) → Resources
+- Double clicked Hard Disk
+- Expanded from 8GB to 20GB
+- Ran resize2fs to expand filesystem:
+```bash
+resize2fs /dev/mapper/pve-vm--101--disk--0
+```
+
+**Fix 2 — Move Data Directory**
+Moved Nextcloud data directory outside the container
+disk to prevent this from happening again:
+```bash
+systemctl stop apache2
+mkdir -p /mnt/ncdata
+chown -R www-data:www-data /mnt/ncdata
+mv /var/www/html/nextcloud/data /mnt/ncdata/
+chown -R www-data:www-data /mnt/ncdata/data
+```
+
+Updated config.php:
+```php
+'datadirectory' => '/mnt/ncdata/data',
+```
+
+Started Apache again:
+```bash
+systemctl start apache2
+```
+
+**Result**
+Nextcloud fully restored. Data directory now sits
+outside the container disk. Future uploads go to
+the larger storage pool and will not fill the
+container disk.
+
+**Lesson Learned**
+Always move Nextcloud data directory outside the
+container disk before enabling auto upload on any
+device. Container disk should only hold the
+application files. User data should always go to
+a dedicated external mount on the larger storage pool.
+Monitor container disk usage regularly in Proxmox
+Summary tab and never let it exceed 80%.

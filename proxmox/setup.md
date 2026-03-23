@@ -127,13 +127,11 @@ for what happens when this order is wrong.
 
 | Container | IP | RAM | Purpose | Status |
 |---|---|---|---|---|
-| Pi-hole | 192.168.0.X | 256MB | DNS / ad blocking | ⬜ |
+| Pi-hole | 192.168.0.X | 256MB | DNS / ad blocking | OK |
 | DuckDNS | 192.168.0.X | 128MB | Dynamic DNS | ⬜ |
 | WireGuard | 192.168.0.X | 256MB | VPN | ⬜ |
-| Vaultwarden | 192.168.0.X | 50MB | Password manager | ⬜ |
-| Gitea | 192.168.0.X | 256MB | Private Git | ⬜ |
-| Nextcloud | 192.168.0.X | 512MB | File storage | ⬜ |
-| Immich | 192.168.0.X | 512MB | Photo backup | ⬜ |
+| Nextcloud | 192.168.0.X | 512MB | File storage | OK |
+| Splunk | 192.168.0.X | 512MB | SIEM | ⬜ |
 | Crowdsec | 192.168.0.X | 256MB | Threat blocking | ⬜ |
 | Uptime Kuma | 192.168.0.X | 100MB | Uptime monitor | ⬜ |
 | Heimdall | 192.168.0.X | 64MB | Dashboard | ⬜ |
@@ -143,7 +141,7 @@ for what happens when this order is wrong.
 ---
 
 ## Lab VMs
-(Fill in as each one is deployed)
+
 
 | VM | IP | RAM | Purpose | Status |
 |---|---|---|---|---|
@@ -156,17 +154,17 @@ for what happens when this order is wrong.
 ---
 
 ## SSH Hardening
-(Fill in when done)
+
 
 ---
 
 ## Two Factor Authentication
-(Fill in when done)
+
 
 ---
 
 ## Fail2ban
-(Fill in when done)
+
 
 ---
 
