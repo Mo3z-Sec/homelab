@@ -45,7 +45,9 @@ SSD — OS and data share the same physical disk.
 | Container | CT ID | Disk Size | Purpose       |
 |-----------|-------|-----------|---------------|
 | pihole    | 100   | 4GB       | Pi-hole app   |
-| nextcloud | 101   | 20GB      | Nextcloud app |
+| nextcloud | 101   | 28GB      | Nextcloud app |
+| duckDNS   | 102   | 2GB       | Dynamic DNS   |
+| wireguard | 103   | 2GB       | VPN           |
 
 ---
 

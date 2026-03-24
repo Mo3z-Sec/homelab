@@ -263,3 +263,34 @@ application files. User data should always go to
 a dedicated external mount on the larger storage pool.
 Monitor container disk usage regularly in Proxmox
 Summary tab and never let it exceed 80%.
+
+---
+
+## 2026-03-24 — WireGuard failed to start due to iptables not installed
+ 
+**Symptom**
+After fixing the config formatting, `systemctl start wg-quick@wg0`
+failed again with a different error:
+```
+/usr/bin/wg-quick: line 295: iptables: command not found
+```
+ 
+**Cause**
+The PostUp rules in `wg0.conf` call iptables to set up
+NAT and forwarding when the tunnel starts. iptables was
+not installed on the fresh Debian 12 LXC container —
+it is not included by default.
+ 
+**Fix**
+```bash
+apt install iptables -y
+systemctl start wg-quick@wg0
+```
+ 
+WireGuard started successfully after installation.
+ 
+**Lesson Learned**
+Always install iptables explicitly on fresh Debian 12
+containers before using WireGuard with PostUp/PostDown
+NAT rules. Do not assume it is pre-installed.
+ 
