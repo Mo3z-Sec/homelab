@@ -293,4 +293,39 @@ WireGuard started successfully after installation.
 Always install iptables explicitly on fresh Debian 12
 containers before using WireGuard with PostUp/PostDown
 NAT rules. Do not assume it is pre-installed.
- 
+
+---
+
+## 2026-03-25 — ISP blocking inbound ports 80 and 443
+
+**Symptom**
+Nginx Proxy Manager was correctly configured and running. Port forwards
+for ports 80 and 443 were set up on the router. However all attempts
+to reach services externally via mo3z-homelab.duckdns.org failed with
+no response. SSL certificate requests via HTTP challenge also failed
+with an internal error.
+
+**Cause**
+Saudi Arabia ISP blocks inbound ports 80 and 443 on residential connections
+at the ISP level. This is common practice — ISPs reserve web hosting
+ports for business lines only. The block happens upstream before
+traffic even reaches the home router, so port forwarding rules have
+no effect.
+
+**Confirmed via**
+Tested port 80 and 443 using NMAP from an external mobile
+device — both showed closed. WireGuard on port 51820 UDP
+confirmed open and working on the same test, proving the router and
+port forwarding are correctly configured.
+
+**Planned Fix**
+Cloudflare Tunnel — establishes an outbound connection from the
+homelab to Cloudflare's edge servers. Since the connection is
+outbound the ISP block is completely bypassed with no port forwarding
+required.
+
+**Lesson Learned**
+Always check if your ISP blocks common ports before building
+infrastructure that depends on them. Residential ISPs frequently
+block ports 80, 443, and 25. Test early using an external port
+checker before investing time in configuration.
