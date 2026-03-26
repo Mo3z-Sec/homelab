@@ -46,6 +46,7 @@ services. Built from scratch on a budget Dell desktop PC.
 | Suricata        | Network security monitor    |
 | Grafana         | Visual dashboards           |
 | DuckDNS         | Dynamic DNS / domain        |
+| Cowrie          | SSH Honeypot |
 
 ---
 
@@ -85,13 +86,15 @@ services. Built from scratch on a budget Dell desktop PC.
 - [x] System updated
 - [x] Network isolation configured
 - [x] Firewall configured
-- [ ] LXC services deployed
+- [x] LXC services deployed
 - [ ] Lab VMs deployed
-- [ ] WireGuard VPN configured
+- [x] WireGuard VPN configured
 - [ ] SSH hardening
 - [ ] 2FA enabled
 - [ ] Fail2ban installed
 - [ ] Security assessment completed
+- [ ] Cowrie honeypot deployed
+- [ ] Splunk ingesting honeypot logs
 
 ---
 
