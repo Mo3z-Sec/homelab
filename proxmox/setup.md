@@ -152,18 +152,17 @@ See [issues-log.md](issues-log.md) for what happens when rule order is wrong.
 | Splunk      | 192.168.0.x  | 2GB    | SIEM               | ⬜     |
 | CrowdSec    | 192.168.0.x  | 256MB  | Threat blocking    | ⬜     |
 | Uptime Kuma | 192.168.0.x  | 100MB  | Uptime monitor     | ⬜     |
-| Heimdall    | 192.168.0.x  | 64MB   | Dashboard          | ⬜     |
-| Nginx PM    | 192.168.0.x  | 128MB  | Reverse proxy      | ⬜     |
+| Heimdall    | 192.168.0.x  | 64MB   | Dashboard          | ✅     |
+| Nginx PM    | 192.168.0.x  | 128MB  | Reverse proxy      | ❌     |
 | Grafana     | 192.168.0.x  | 512MB  | Monitoring         | ⬜     |
+| Crowie      | 192.168.0.x  | x      | honeypot           | ⬜     |
+| OPNsense      | 192.168.0.x  | x      | Firewall, IDS/IPS           | ⬜     |
 
 
 
-### Suricata
+### OPNsense
 
-Not yet deployed. Planned as a network security monitor — deployment
-location (host vs LXC) to be decided. Running it directly on the
-Proxmox host is recommended as it gives direct access to vmbr0 and
-vmbr1 without container networking overhead.
+Not yet deployed. Planned as a network security monitor integrated withing OPNsense — deployment location is gpong to be directly on Proxmox. Running it directly on the Proxmox host is recommended as it gives direct access to vmbr0 and vmbr1 without container networking overhead.
 
 ---
 
@@ -189,10 +188,11 @@ vmbr1 without container networking overhead.
 - [x] vmbr0 verified
 - [x] vmbr1 created
 - [x] Firewall configured
+- [x] WireGuard VPN configured
 - [ ] LXC containers deployed
+- [ ] OPNsense
 - [ ] Lab VMs deployed
 - [ ] SSH hardening
 - [ ] 2FA enabled
 - [ ] Fail2ban installed
-- [ ] WireGuard VPN configured
 - [ ] Security assessment completed

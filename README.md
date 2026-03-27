@@ -43,10 +43,10 @@ services. Built from scratch on a budget Dell desktop PC.
 | Heimdall        | Services dashboard          |
 | Nginx Proxy Mgr | Reverse proxy and SSL       |
 | Splunk          | SIEM                        |
-| Suricata        | Network security monitor    |
 | Grafana         | Visual dashboards           |
 | DuckDNS         | Dynamic DNS / domain        |
-| Cowrie          | SSH Honeypot |
+| Cowrie          | SSH Honeypot                |
+| OPNsense        | Firewall, IDS/IPS           |
 
 ---
 
