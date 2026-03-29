@@ -329,3 +329,27 @@ Always check if your ISP blocks common ports before building
 infrastructure that depends on them. Residential ISPs frequently
 block ports 80, 443, and 25. Test early using an external port
 checker before investing time in configuration.
+
+---
+
+## 2026-03-25 — Uptime Kuma showing WireGuard as down
+
+**Symptom**
+Added WireGuard to Uptime Kuma and it immediately showed down.
+Checked the container — it was running fine and the tunnel was
+active on my MacBook.
+
+**Cause**
+I set the monitor to TCP port 51820 without thinking. WireGuard
+runs on UDP, not TCP. Uptime Kuma was never actually reaching
+anything — a TCP probe on a UDP port always fails.
+
+**Fix**
+Switched to monitoring SSH port 22 on 192.168.0.53 instead.
+The container runs SSH so port 22 being open is a reliable enough
+sign that WireGuard is up.
+
+**Lesson Learned**
+Know your protocols before setting up monitors. UDP services
+cannot be checked with TCP monitors — always check what protocol
+a service runs on first.
