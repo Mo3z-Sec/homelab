@@ -5,20 +5,19 @@
 Proxmox VE 9.1 installed on a budget Dell i5-6500 desktop PC as the
 primary homelab hypervisor. Replaces Windows as the host OS. Managed
 entirely through the web UI from MacBook browser at
-`https://192.168.0.x:8006`.
+`https://192.168.0.169:8006`.
 
 ---
 
 ## Hardware
 
-| Component | Details                         |
-|-----------|---------------------------------|
-| CPU       | Intel Core i5-6500              |
-| RAM       | 8GB DDR4                        |
-| Storage   | 931GB HDD (single disk)         |
-| NICs      | nic0 (active), nic1             |
-| OS        | Proxmox VE 9.1 (Debian 12)      |
-
+| Component | Details                    |
+|-----------|----------------------------|
+| CPU       | Intel Core i5-6500         |
+| RAM       | 8GB DDR4                   |
+| Storage   | 931GB HDD (single disk)    |
+| NICs      | nic0 (active), nic1        |
+| OS        | Proxmox VE 9.1 (Debian 12) |
 
 ---
 
@@ -31,27 +30,27 @@ installation. See [issues-log.md](issues-log.md) for full details.
 
 ### Install Settings
 
-| Setting  | Value                |
-|----------|----------------------|
-| Disk     | sda (931GB HDD)      |
-| FS       | ext4                 |
-| Hostname | pve.homelab.local    |
-| IP       | 192.168.0.x (static) |
-| Gateway  | 192.168.0.1          |
-| DNS      | 192.168.0.1          |
+| Setting  | Value                  |
+|----------|------------------------|
+| Disk     | sda (931GB HDD)        |
+| FS       | ext4                   |
+| Hostname | pve.homelab.local      |
+| IP       | 192.168.0.169 (static) |
+| Gateway  | 192.168.0.1            |
+| DNS      | 192.168.0.1            |
 
 ---
 
 ## Storage Layout
 
-| Volume   | Size   | Purpose               |
-|----------|--------|-----------------------|
-| sda1     | 1007KB | BIOS boot             |
-| sda2     | 1GB    | EFI / boot            |
-| sda3     | 930GB  | LVM physical volume   |
-| pve-swap | 7.7GB  | Swap                  |
-| pve-root | 96GB   | Proxmox OS            |
-| pve-data | 794GB  | VM and container disks|
+| Volume   | Size   | Purpose                |
+|----------|--------|------------------------|
+| sda1     | 1007KB | BIOS boot              |
+| sda2     | 1GB    | EFI / boot             |
+| sda3     | 930GB  | LVM physical volume    |
+| pve-swap | 7.7GB  | Swap                   |
+| pve-root | 96GB   | Proxmox OS             |
+| pve-data | 794GB  | VM and container disks |
 
 ---
 
@@ -110,71 +109,65 @@ after each system update.
 - Zero internet access by design — vmbr1 has no path to the router
 - Zero access to vmbr0 services
 - Subnet: `10.10.10.0/24`
-- Kali laptop reaches lab VMs via SSH on port 22 into the lab network
+- Kali laptop reaches lab VMs via SSH on port 22
 - SSH port hardening planned — see hardening checklist
+- Exception: port 9997 allowed from vmbr1 → Splunk (192.168.0.59)
+  for Universal Forwarder log shipping only
+
+### vmbr2 — DMZ Network (planned)
+
+- Will be created when Cowrie honeypot is deployed
+- Internet-facing but completely isolated from vmbr0 and vmbr1
+- Cowrie honeypot will be the only service on this bridge
+- Real attack traffic captured without any path to internal services
+- Subnet: `10.20.20.0/24` (planned)
 
 ---
 
 ## Firewall Configuration
 
-### Levels Enabled
-
-- Datacenter firewall: enabled
-- Node (pve) firewall: enabled
-
-### Rules (order is critical — processed top to bottom)
-
-| Priority | Direction | Action | Protocol | Source          | Port  | Purpose                          |
-|----------|-----------|--------|----------|-----------------|-------|----------------------------------|
-| 0        | in        | ACCEPT | TCP      | 192.168.0.x/24  | 8006  | Web UI                           |
-| 1        | in        | ACCEPT | TCP      | 192.168.0.x/24  | 22    | SSH                              |
-| 2        | in        | ACCEPT | UDP      | any             | 51820 | WireGuard                        |
-| 3        | in        | ACCEPT | ICMP     | 192.168.0.x/24  | any   | Home network ping                |
-| 4        | in        | DROP   | any      | 10.10.10.x/24   | any   | Block lab VMs from host          |
-| 5        | in        | DROP   | any      | any             | any   | Block all other inbound          |
-
-> Note: Lab VMs on vmbr1 cannot reach the internet or vmbr0 regardless of firewall
-> rules because vmbr1 has no bridge port — there is no physical path to the router.
-> Rule 4 is a defence-in-depth measure in case of misconfiguration.
-
-See [issues-log.md](issues-log.md) for what happens when rule order is wrong.
+See [firewall.md](firewall.md) for full rules and configuration.
 
 ---
 
 ## LXC Containers
 
-| Container   | IP           | RAM    | Purpose            | Status |
-|-------------|--------------|--------|--------------------|--------|
-| Pi-hole     | 192.168.0.51  | 256MB  | DNS / ad blocking  | ✅     |
-| DuckDNS     | 192.168.0.52  | 128MB  | Dynamic DNS        | ✅     |
-| WireGuard   | 192.168.0.53  | 256MB  | VPN                | ✅     |
-| Nextcloud   | 192.168.0.56  | 512MB  | File storage       | ✅     |
-| Splunk      | 192.168.0.x  | 2GB    | SIEM               | ⬜     |
-| CrowdSec    | 192.168.0.x  | 256MB  | Threat blocking    | ⬜     |
-| Uptime Kuma | 192.168.0.x  | 100MB  | Uptime monitor     | ⬜     |
-| Heimdall    | 192.168.0.x  | 64MB   | Dashboard          | ✅     |
-| Nginx PM    | 192.168.0.x  | 128MB  | Reverse proxy      | ❌     |
-| Grafana     | 192.168.0.x  | 512MB  | Monitoring         | ⬜     |
-| Crowie      | 192.168.0.x  | x      | honeypot           | ⬜     |
-| OPNsense      | 192.168.0.x  | x      | Firewall, IDS/IPS           | ⬜     |
+| Container   | IP            | RAM    | Purpose          | Status |
+|-------------|---------------|--------|------------------|--------|
+| Pi-hole     | 192.168.0.51  | 256MB  | DNS / ad block   | ✅     |
+| DuckDNS     | 192.168.0.52  | 128MB  | Dynamic DNS      | ✅     |
+| WireGuard   | 192.168.0.53  | 256MB  | VPN              | ✅     |
+| Nginx PM    | 192.168.0.54  | 512MB  | Reverse proxy    | ⏸     |
+| CrowdSec    | 192.168.0.55  | 256MB  | Threat blocking  | ⬜     |
+| Nextcloud   | 192.168.0.56  | 512MB  | File storage     | ✅     |
+| Uptime Kuma | 192.168.0.57  | 128MB  | Uptime monitor   | ✅     |
+| Heimdall    | 192.168.0.58  | 256MB  | Dashboard        | ✅     |
+| Splunk      | 192.168.0.59  | 4096MB | SIEM             | ✅     |
+| Grafana     | 192.168.0.60  | 512MB  | Dashboards       | ⬜     |
+| Cowrie      | vmbr2         | 256MB  | SSH honeypot     | ⬜     |
 
+---
 
+## OPNsense (planned)
 
-### OPNsense
+Will be deployed as a VM directly on Proxmox with two virtual NICs —
+one on vmbr0 and one on vmbr1. Acts as the primary firewall and router
+replacing the current Proxmox firewall rules. Includes Suricata IDS/IPS
+built in for full network visibility across both bridges.
 
-Not yet deployed. Planned as a network security monitor integrated withing OPNsense — deployment location is gpong to be directly on Proxmox. Running it directly on the Proxmox host is recommended as it gives direct access to vmbr0 and vmbr1 without container networking overhead.
+Planned deployment after RAM upgrade (second 8GB DDR4 stick).
 
 ---
 
 ## Lab VMs
 
-| VM                  | IP           | RAM    | Purpose               | Status |
-|---------------------|--------------|--------|-----------------------|--------|
-| Windows Server 2022 | 10.10.10.x   | 3GB    | Domain controller     | ⬜     |
-| Windows 10 WS01     | 10.10.10.x   | 2GB    | Domain workstation    | ⬜     |
-| Windows 10 WS02     | 10.10.10.x   | 2GB    | Misconfigured admin   | ⬜     |
-| Metasploitable 2    | 10.10.10.x   | 512MB  | Vulnerable Linux      | ⬜     |
-| DVWA                | 10.10.10.x   | 512MB  | Vulnerable web app    | ⬜     |
+| VM                  | IP           | RAM   | Purpose             | Status |
+|---------------------|--------------|-------|---------------------|--------|
+| Windows Server 2022 | 10.10.10.X   | 3GB   | Domain controller   | ⬜     |
+| Windows 10 WS01     | 10.10.10.X   | 2GB   | Domain workstation  | ⬜     |
+| Windows 10 WS02     | 10.10.10.X   | 2GB   | Misconfigured admin | ⬜     |
+| Metasploitable 2    | 10.10.10.X   | 512MB | Vulnerable Linux    | ⬜     |
+| DVWA                | 10.10.10.X   | 512MB | Vulnerable web app  | ⬜     |
 
 ---
 
@@ -189,8 +182,12 @@ Not yet deployed. Planned as a network security monitor integrated withing OPNse
 - [x] vmbr1 created
 - [x] Firewall configured
 - [x] WireGuard VPN configured
-- [ ] LXC containers deployed
-- [ ] OPNsense
+- [x] LXC containers deployed (Pi-hole, DuckDNS, WireGuard, Nextcloud, Heimdall, Uptime Kuma, Splunk, Nginx PM)
+- [ ] vmbr2 DMZ created
+- [ ] Grafana deployed
+- [ ] CrowdSec deployed
+- [ ] Cowrie honeypot deployed
+- [ ] OPNsense deployed
 - [ ] Lab VMs deployed
 - [ ] SSH hardening
 - [ ] 2FA enabled
