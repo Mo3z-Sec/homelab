@@ -353,3 +353,128 @@ sign that WireGuard is up.
 Know your protocols before setting up monitors. UDP services
 cannot be checked with TCP monitors — always check what protocol
 a service runs on first.
+
+---
+
+## 2026-04-01 — Insufficient RAM to deploy WS02
+
+**Symptom**
+Only ~1.6GB free after running Windows Server, WS01, Splunk,
+and all LXC containers. WS02 needs 2GB — not enough headroom.
+
+**Cause**
+8GB RAM is not enough for the full lab stack simultaneously.
+Splunk (4GB) + Windows Server (3GB) + WS01 (2GB) = 9GB before
+containers.
+
+**Workaround**
+WS02 postponed. Running VMs one at a time depending on what
+I'm practicing.
+
+**Planned fix**
+Second 8GB DDR4 stick — brings total to 16GB and solves the
+problem permanently.
+
+**Lesson Learned**
+16GB should be the minimum RAM target for a homelab running
+a SIEM, multiple Windows VMs, and service containers together.
+
+---
+## 2026-04-04 — Metasploitable 2 got no IP on vmbr1
+
+**Symptom**
+After booting Metasploitable 2 it had no IP address and was
+unreachable from anywhere.
+
+**Cause**
+vmbr1 has no DHCP server. Metasploitable tried DHCP on boot,
+got no response, and ended up with nothing.
+
+**Fix**
+Struggled with this for a while then found the fix on Reddit —
+someone had the exact same issue with an isolated lab network.
+Manually set a static IP in /etc/network/interfaces:
+```
+auto eth0
+iface eth0 inet static
+address 10.10.10.20
+netmask 255.255.255.0
+gateway 10.10.10.1
+```
+```bash
+sudo /etc/init.d/networking restart
+```
+
+**Lesson Learned**
+Every VM on vmbr1 needs a static IP set manually on first boot.
+There is no DHCP — nothing will assign an address automatically.
+
+---
+
+## 2026-04-05 — Kali could not reach vmbr1 lab network
+
+**Symptom**
+Kali had no way to reach anything on vmbr1. Metasploitable,
+Windows Server, and WS01 were all unreachable. Nmap and ping
+returned nothing.
+
+**Cause**
+vmbr1 is isolated with no physical port and no IP on the
+Proxmox host. No network path existed between Kali on
+192.168.0.x and the lab VMs on 10.10.10.x.
+
+**What I tried first — SSH**
+Thought about using SSH as a jump host into vmbr1. The problem
+is SSH gives a shell, not actual network access. Tools like
+Metasploit and nmap need to send traffic directly to targets —
+SSH tunneling doesn't support that cleanly.
+
+**Fix**
+Gave Proxmox an IP on vmbr1 so it acts as a router:
+```bash
+ip addr add 10.10.10.1/24 dev vmbr1
+ip link set vmbr1 up
+```
+
+Made permanent in /etc/network/interfaces.
+
+Enabled IP forwarding on Proxmox:
+```bash
+echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf
+sysctl -p
+```
+
+Disabled ICMP redirects — without this Proxmox was telling
+Kali to use the home router which killed the packets:
+```bash
+sysctl -w net.ipv4.conf.all.send_redirects=0
+sysctl -w net.ipv4.conf.default.send_redirects=0
+sysctl -w net.ipv4.conf.vmbr0.send_redirects=0
+```
+
+Added static route on Kali made permanent in
+/etc/network/interfaces:
+```bash
+sudo ip route add 10.10.10.0/24 via 192.168.0.169
+```
+
+**Why static route over SSH tunneling**
+Static routing gives Kali real layer 3 access to vmbr1 — every
+tool works natively. SSH tunneling requires wrapping each
+tool individually which doesn't work well with Metasploit.
+Static routing is also how real enterprise networks handle
+inter-VLAN access — through a proper router, not workarounds.
+
+**How OPNsense will improve this**
+Proxmox is currently acting as a basic unmanaged router with
+no visibility into cross-network traffic. OPNsense will take
+over this routing properly — with firewall rules, logging, and
+full control over what Kali can reach on vmbr1.
+
+**Lesson Learned**
+Isolated networks need a layer 3 path to be reachable. Always
+assign an IP to the bridge interface on the hypervisor if you
+need to route traffic to isolated VMs.
+
+---
+

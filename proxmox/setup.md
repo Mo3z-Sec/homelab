@@ -109,10 +109,14 @@ after each system update.
 - Zero internet access by design — vmbr1 has no path to the router
 - Zero access to vmbr0 services
 - Subnet: `10.10.10.0/24`
-- Kali laptop reaches lab VMs via SSH on port 22
-- SSH port hardening planned — see hardening checklist
-- Exception: port 9997 allowed from vmbr1 → Splunk (192.168.0.59)
+- Proxmox assigned `10.10.10.1/24` on vmbr1 to act as a router
+  between vmbr0 and vmbr1
+- Kali reaches lab VMs via static route through Proxmox
+- IP forwarding enabled on Proxmox host
+- ICMP redirects disabled on Proxmox to prevent routing issues
+- Exception: port 9997 allowed from vmbr1 - Splunk (192.168.0.59)
   for Universal Forwarder log shipping only
+- OPNsense will replace this routing setup when deployed
 
 ### vmbr2 — DMZ Network (planned)
 
@@ -163,12 +167,14 @@ Planned deployment after RAM upgrade (second 8GB DDR4 stick).
 
 | VM                  | IP           | RAM   | Purpose             | Status |
 |---------------------|--------------|-------|---------------------|--------|
-| Windows Server 2022 | 10.10.10.X   | 3GB   | Domain controller   | ⬜     |
-| Windows 10 WS01     | 10.10.10.X   | 2GB   | Domain workstation  | ⬜     |
-| Windows 10 WS02     | 10.10.10.X   | 2GB   | Misconfigured admin | ⬜     |
-| Metasploitable 2    | 10.10.10.X   | 512MB | Vulnerable Linux    | ⬜     |
-| DVWA                | 10.10.10.X   | 512MB | Vulnerable web app  | ⬜     |
-
+| Windows Server 2022 | 10.10.10.10  | 3GB   | Domain controller   | ✅     |
+| Windows 10 WS01     | 10.10.10.11  | 2GB   | Domain workstation  | ✅     |
+| Windows 10 WS02     | 10.10.10.12  | 2GB   | Misconfigured admin | ⬜     |
+| Metasploitable 2    | 10.10.10.20  | 512MB | Vulnerable Linux    | ✅     |
+| DVWA                | 10.10.10.30  | 512MB | Vulnerable web app  | ⬜     |
+ 
+> WS02 deployment blocked — insufficient RAM. Requires second 8GB
+> DDR4 stick. See issues-log.md for details.
 ---
 
 ## Checklist
@@ -182,13 +188,20 @@ Planned deployment after RAM upgrade (second 8GB DDR4 stick).
 - [x] vmbr1 created
 - [x] Firewall configured
 - [x] WireGuard VPN configured
+- [x] IP forwarding configured
+- [x] Static route configured for Kali → vmbr1
 - [x] LXC containers deployed (Pi-hole, DuckDNS, WireGuard, Nextcloud, Heimdall, Uptime Kuma, Splunk, Nginx PM)
+- [x] Windows Server 2022 deployed
+- [x] Windows 10 WS01 deployed
+- [x] Metasploitable 2 deployed
+- [ ] DVWA deployed
+- [ ] WS02 deployed (blocked — RAM upgrade needed)
 - [ ] vmbr2 DMZ created
-- [ ] Grafana deployed
-- [ ] CrowdSec deployed
 - [ ] Cowrie honeypot deployed
 - [ ] OPNsense deployed
-- [ ] Lab VMs deployed
+- [ ] Grafana deployed
+- [ ] CrowdSec deployed
+- [ ] Splunk Universal Forwarder configured on lab VMs
 - [ ] SSH hardening
 - [ ] 2FA enabled
 - [ ] Fail2ban installed
